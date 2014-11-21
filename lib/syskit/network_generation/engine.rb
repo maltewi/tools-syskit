@@ -500,10 +500,11 @@ module Syskit
                 task_contexts.each do |task|
                     seen = Hash.new
                     task.each_concrete_input_connection do |source_task, source_port, sink_port, _|
-                        if (port_model = task.model.find_input_port(sink_port)) && port_model.multiplexes?
+                        seen_task, seen_port = seen[sink_port]
+                        if (port_model = task.model.find_input_port(sink_port)) && port_model.multiplexes? || source_task == seen_task && source_port == seen_port
                             next
                         elsif seen[sink_port]
-                            seen_task, seen_port = seen[sink_port]
+                            binding.pry
                             raise SpecError, "#{task}.#{sink_port} is connected multiple times, at least to #{source_task}.#{source_port} and #{seen_task}.#{seen_port}"
                         end
                         seen[sink_port] = [source_task, source_port]
