@@ -160,7 +160,7 @@ module Syskit
 
                 new_port_mappings.each do |service_name, self_name|
                     if !(source_port = service_model.find_port(service_name))
-                        raise SpecError, "#{service_name} is not a port of #{service_model.short_name}"
+                        raise SpecError, "#{service_name} is not a port of #{service_model.short_name}. Available ports are: #{service_model.ports.keys}"
                     end
                     if !(target_port = find_port(self_name))
                         raise SpecError, "#{self_name} is not a port of #{short_name}"
