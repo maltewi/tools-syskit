@@ -331,6 +331,8 @@ module Syskit
                     # this set can be replaced by +task+
                     candidates = plan.find_local_tasks(task.model.fullfilled_model)
                     debug { "#{candidates.to_a.size} candidates for #{task}" }
+                    candidates=candidates.map do |t| t if t.arguments == task.arguments end.compact 
+                    debug { "#{candidates.to_a.size} candidates for #{task} after fitering by arguments" }
                     candidates = candidates.sort_by { |t| Flows::DataFlow.in_degree(t) }
                         
                     candidates.each do |target_task|
