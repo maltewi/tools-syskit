@@ -17,6 +17,8 @@ module Syskit
             # the actual ports on the component
             attr_reader :port_mappings
 
+            attr_reader :frame_mappings
+
             # The service's full name, i.e. the name with which it is referred
             # to in the task model
             attr_reader :full_name
@@ -40,9 +42,9 @@ module Syskit
 
             def hash; [self.class, full_name, component_model].hash end
 
-            def initialize(name, component_model, master, model, port_mappings)
-                @name, @component_model, @master, @model, @port_mappings = 
-                    name, component_model, master, model, port_mappings
+            def initialize(name, component_model, master, model, port_mappings, frame_mappings=Hash.new)
+                @name, @component_model, @master, @model, @port_mappings, @frame_mappings = 
+                    name, component_model, master, model, port_mappings, frame_mappings
 
                 @full_name =
                     if master
@@ -182,6 +184,10 @@ module Syskit
                 port_mappings_for(model)
             end
 
+            def frame_mappings_for_task
+               frame_mappings_for(model) 
+            end
+
             # Returns the port mappings that should be applied from the service
             # model +service_model+ to the providing task
             #
@@ -191,6 +197,13 @@ module Syskit
             #
             def port_mappings_for(service_model)
                 if !(result = port_mappings[service_model])
+                    raise ArgumentError, "#{service_model} is not provided by #{model.short_name}"
+                end
+                result
+            end
+
+            def frame_mappings_for(service_model)
+                if !(result = frame_mappings[service_model])
                     raise ArgumentError, "#{service_model} is not provided by #{model.short_name}"
                 end
                 result

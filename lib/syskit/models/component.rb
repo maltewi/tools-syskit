@@ -222,6 +222,10 @@ module Syskit
                 end
             end
 
+            def frame_mappings_for(model)
+                 find_data_service_from_type(model).frame_mappings_for_task
+            end
+
             # Finds a single service that provides +type+
             #
             # @see #find_all_data_services_from_type
@@ -588,6 +592,19 @@ module Syskit
                         arguments.delete(from.to_sym)
                     end
                 end
+
+                #handle frame mappings
+                new_frame_mappings = {}
+                arguments.reject! do |from, to|
+                    if model.known_frames.include?(from) and transformer.configurable_frames.include?(to)
+                        new_frame_mappings[from] = to
+                        true
+                    else
+                        false
+                    end
+                end
+                service.frame_mappings[model] = new_frame_mappings
+
 
                 include model
 
