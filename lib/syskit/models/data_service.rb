@@ -158,6 +158,32 @@ module Syskit
                     end
                 end
 
+                service_model.required_transforms.each do |f|
+                    if known_frames.include?(f) && !new_port_mappings[f]
+                        binding.pry
+                        raise SpecError, "frame collision: #{self} and #{service_model} both have a frame named #{f}. If you mean to tell syskit that this is the frame, you must provide the mapping explicitely by adding '#{f}' => '#{f}' to the provides statement"
+                        new_port_mappings[f] ||= f
+                    end
+                end
+
+                #Distinguish between port and frame mappings
+                new_frame_mappings = {}
+                new_port_mappings.reject! do |service_name, self_name|
+                    #is port or frame mapping?
+                    has_port = service_model.find_port(service_name)
+                    has_frame = service_model.known_frames.include?(service_name)
+                    if has_port and has_frame
+                        raise SpecError, "#{service_name} cannot be uniquely mapped to either a service port or frame."
+                    end
+
+                    if has_frame
+                        new_frame_mappings[service_name] = self_name
+                    end
+                    
+                    not has_port
+                end
+
+                #Do the port mappings match?
                 new_port_mappings.each do |service_name, self_name|
                     if !(source_port = service_model.find_port(service_name))
                         raise SpecError, "#{service_name} is not a port of #{service_model.short_name}. Available ports are: #{service_model.ports.keys}"
@@ -199,7 +225,25 @@ module Syskit
                     port_mappings[self][p.name] = p.name
                 end
 
+                #Only those frames from parent service model are required which are not mapped from the current
+                required_transforms_from_service_model = service_model.required_transforms.reject do |source, target|
+                    required_transforms.to_a.include? [new_frame_mappings[source], new_frame_mappings[target]]
+                end
+                required_transforms.concat required_transforms_from_service_model
+
                 super(service_model)
+            end
+
+            def required_transforms
+                @required_transforms ||= []
+            end
+
+            def known_frames
+                @required_transforms.flatten.to_set
+            end
+
+            def input_transform(source, target)
+                required_transforms.push [source,target]
             end
 
             # [Orocos::Spec::TaskContext] the object describing the data
