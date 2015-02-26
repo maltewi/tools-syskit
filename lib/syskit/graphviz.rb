@@ -577,7 +577,7 @@ module Syskit
                     return "digraph { }"
                 else
                     ["digraph {",
-                     "  splines=ortho;",
+                     "  splines=true;",
                      "  rankdir=LR;",
                      "  node [shape=none,margin=0,height=.1,fontname=\"Arial\"];"].
                     concat(result).
