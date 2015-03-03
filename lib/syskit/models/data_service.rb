@@ -27,6 +27,7 @@ module Syskit
                 super
                 @orogen_model = Models.create_orogen_task_context_model
                 port_mappings.clear
+                frame_mappings.clear
             end
 
             # @!attribute rw port_mappings
@@ -45,6 +46,7 @@ module Syskit
             #   @return [Hash<DataServiceModel,Hash<String,String>>] the
             #     mappings
             attribute(:port_mappings) { Hash.new }
+            attribute(:frame_mappings) { Hash.new }
 
             # The set of services that this service provides
             def each_fullfilled_model
@@ -120,6 +122,14 @@ module Syskit
             # Raises ArgumentError if +self+ does not provide +service_type+
             def port_mappings_for(service_type)
                 result = port_mappings[service_type]
+                if !result
+                    raise ArgumentError, "#{service_type.short_name} is not provided by #{short_name}"
+                end
+                result
+            end
+
+            def frame_mappings_for(service_type)
+                result = frame_mappings[service_type]
                 if !result
                     raise ArgumentError, "#{service_type.short_name} is not provided by #{short_name}"
                 end
@@ -215,6 +225,8 @@ module Syskit
                 port_mappings[service_model] =
                     Models.merge_port_mappings(port_mappings[service_model] || Hash.new, new_port_mappings)
 
+                frame_mappings[service_model] = new_frame_mappings
+
                 # Merging the interface should never raise at this stage. It
                 # should have been validated above.
                 Models.merge_orogen_task_context_models(orogen_model, [service_model.orogen_model], new_port_mappings)
@@ -225,11 +237,20 @@ module Syskit
                     port_mappings[self][p.name] = p.name
                 end
 
-                #Only those frames from parent service model are required which are not mapped from the current
+                known_frames.each do |f|
+                    frame_mappings[self] = {f => f}
+                end
+
+                #Only those transforms from parent service model are required which are not mapped from the current
                 required_transforms_from_service_model = service_model.required_transforms.reject do |source, target|
                     required_transforms.to_a.include? [new_frame_mappings[source], new_frame_mappings[target]]
                 end
                 required_transforms.concat required_transforms_from_service_model
+
+                generated_transforms_from_service_model = service_model.generated_transforms.reject do |port, (source, target)|
+                    generated_transforms.to_a.include? [new_frame_mappings[source], new_frame_mappings[target]]
+                end
+                generated_transforms.merge! generated_transforms_from_service_model
 
                 super(service_model)
             end
@@ -238,12 +259,28 @@ module Syskit
                 @required_transforms ||= []
             end
 
+            def generated_transforms
+                @generated_transforms ||= {}
+            end
+
             def known_frames
-                @required_transforms.flatten.to_set
+                (required_transforms.flatten + generated_transforms.values.flatten).to_set
+            end
+
+            def frame_mappings
+                @frame_mappings ||= Hash.new
             end
 
             def input_transform(source, target)
                 required_transforms.push [source,target]
+            end
+
+            def output_transform(port, source, target)
+                raise SpecError, "Could not assign transform (#{source} => #{target}) to port #{port}. The given "\
+                                 "port does not exist" if not find_output_port(port)
+                raise SpecError, "Could not assign transform (#{source} => #{target}) to port #{port}. The given "\
+                                 "port is not of type RigidbodyState" if not find_output_port(port).type == Types::Base::Samples::RigidBodyState
+                generated_transforms[port] = [source, target]
             end
 
             # [Orocos::Spec::TaskContext] the object describing the data

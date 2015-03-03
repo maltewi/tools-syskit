@@ -596,7 +596,7 @@ module Syskit
                 #handle frame mappings
                 new_frame_mappings = {}
                 arguments.reject! do |from, to|
-                    if model.known_frames.include?(from) and transformer.configurable_frames.include?(to)
+                    if transformer.available_frames.include?(to)
                         new_frame_mappings[from] = to
                         true
                     else

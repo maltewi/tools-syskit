@@ -700,7 +700,11 @@ module Syskit
             #
             # @return [Orocos::Port]
             def self_port_to_orocos_port(port)
-                orocos_task.find_port(port.type, port.name)
+                begin
+                    orocos_task.find_port(port.type, port.name)
+                rescue Exception => ex
+                    binding.pry
+                end
             end
 
             # Adds a new port to this model based on a known dynamic port
