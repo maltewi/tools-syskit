@@ -186,7 +186,7 @@ module Syskit
                     # Change to the log dir so that the IOR file created by
                     # the CORBA bindings ends up there
                     Dir.chdir(app.log_dir) do
-                        Orocos::CORBA.name_service.ip="aila-control"
+                        Orocos::CORBA.name_service.ip=Syskit.conf.host
                         Orocos.initialize
                         if Orocos::ROS.enabled?
                             Orocos::ROS.initialize
