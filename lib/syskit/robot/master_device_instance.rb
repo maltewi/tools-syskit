@@ -275,7 +275,7 @@ module Syskit
                     driver_model.to_instance_requirements.
                         with_arguments(task_arguments).
                         merge(requirements).
-                        merge(Syskit::Composition.use(@dependency_injection))
+                        merge(driver_model.component_model.use(@dependency_injection))
                 else
                     driver_model.to_instance_requirements.
                         with_arguments(task_arguments).
