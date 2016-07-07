@@ -713,13 +713,14 @@ module Syskit
                         end
 
                     else
-                        name = task.model.name || ""
+                        name = task.model.name.dup || ""
                     end
-
                     if task.execution_agent && task.respond_to?(:orocos_name)
-                        name << "[#{task.orocos_name}]"
+                        orocos_name = "#{task.orocos_name}"
+                        label << "<TR><TD COLSPAN=\"2\">#{escape_dot(name)}</TD></TR><TR><TD>orocos_name</TD><TD>#{escape_dot(orocos_name)}</TD></TR>"
+                    else
+                        label << "<TR><TD COLSPAN=\"2\">#{escape_dot(name)}</TD></TR>"
                     end
-                    label << "<TR><TD COLSPAN=\"2\">#{escape_dot(name)}</TD></TR>"
                     ann = format_annotations(annotations)
                     label << ann
                 end
