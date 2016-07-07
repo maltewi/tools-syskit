@@ -27,9 +27,9 @@ module Syskit
                 @dataflow_options = Hash[
                     :title => 'Dataflow',
                     :id => 'dataflow',
-                    :remove_compositions => false,
+                    :remove_compositions => true,
                     :show_all_ports => false,
-                    :annotations => ['task_info'].to_set,
+                    :annotations => [].to_set,
                     :excluded_models => Set.new,
                     :zoom => 1
                 ]
