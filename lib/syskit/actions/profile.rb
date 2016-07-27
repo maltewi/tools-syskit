@@ -162,6 +162,9 @@ module Syskit
             def use_profile(profile, tags = Hash.new)
                 invalidate_dependency_injection
                 tags = resolve_tag_selection(profile, tags)
+                if used_profiles.include? [profile, tags]
+                    return
+                end
                 used_profiles.push([profile, tags])
 
                 # Register the definitions, but let the user override
